@@ -24,11 +24,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifdef ENABLE_OPENSTA
 #ifdef ENABLE_ABC
 
 #include <stdlib.h>
 #include <mockturtle/mockturtle.hpp>
+
+#ifdef ENABLE_OPENSTA
 #include <sta/Sta.hh>
 #include <sta/ConcreteNetwork.hh>
 #include <sta/Corner.hh>
@@ -42,14 +43,15 @@
 #include <sta/VerilogReader.hh>
 #include <sta/StaMain.hh>
 
-#include "algorithms/output/verilog_utilities.hpp"
-
 namespace sta {
 extern const char *tcl_inits[];
 }
 extern "C" {
 extern int Sta_Init(Tcl_Interp *interp);
 }
+#endif  // ENABLE_OPENSTA
+
+#include "algorithms/output/verilog_utilities.hpp"
 
 
 #include <filesystem>
@@ -1399,6 +1401,7 @@ string techmap(
 
 }
 
+#ifdef ENABLE_OPENSTA
 void print_path(sta::ConcreteInstance *i)
 {
     if (sta::ConcreteInstance *p = i->parent()) {
@@ -1648,6 +1651,7 @@ void reset_sta()
     Tcl_Eval(tcl_interp, "sta::define_sta_cmds");
     Tcl_Eval(tcl_interp, "namespace import sta::*");
 }
+#endif  // ENABLE_OPENSTA
 
 
 template <typename network>
@@ -1764,6 +1768,7 @@ xmg_names setup_output1(
     std::cout << "Finished connecting outputs" << std::endl;
     return partitions_out.get_network();
 }
+#ifdef ENABLE_OPENSTA
 /*
  * Mixed synthesis followed by XMG resynthesis and combination.
  */
@@ -1828,6 +1833,7 @@ template <typename network> xmg_names optimize_timing(
     // Output network
     return setup_output(partitions, optimized);
 }
+#endif  // ENABLE_OPENSTA
 
 
 /*
@@ -1920,11 +1926,13 @@ xmg_names optimize_basic (
 
 
 /**************** Template instances ****************/
+#ifdef ENABLE_OPENSTA
 template xmg_names
 optimize_timing<mockturtle::aig_network>
 (
     oracle::partition_manager_junior<mockturtle::aig_network> &,
     const std::string &, const std::string &, const std::string &, const std::string &, const std::string &, const std::string &, const std::string &);
+#endif  // ENABLE_OPENSTA
 
 template xmg_names
 optimize_basic<mockturtle::aig_network>
@@ -1940,24 +1948,23 @@ optimize_resynthesis<mockturtle::aig_network>
     oracle::partition_manager_junior<mockturtle::aig_network> &,
     const std::string &);
 
-template void 
-write_child<mockturtle::aig_network>( 
+template void
+write_child<mockturtle::aig_network>(
     int, partition_manager_junior<mockturtle::aig_network> &, std::ofstream &);
 
-template void 
-write_child<mockturtle::mig_network>( 
+template void
+write_child<mockturtle::mig_network>(
     int, partition_manager_junior<mockturtle::mig_network> &, std::ofstream &);
 
-template void 
-write_child<mockturtle::xmg_network>( 
+template void
+write_child<mockturtle::xmg_network>(
     int, partition_manager_junior<mockturtle::xmg_network> &, std::ofstream &);
 
-template void 
-write_child<mockturtle::xag_network>( 
+template void
+write_child<mockturtle::xag_network>(
     int, partition_manager_junior<mockturtle::xag_network> &, std::ofstream &);
 
 }
 
 
-#endif
-#endif
+#endif  // ENABLE_ABC

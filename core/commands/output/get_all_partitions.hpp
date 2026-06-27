@@ -36,6 +36,8 @@
 #include <stdlib.h>
 #include <filesystem>
 
+#include "algorithms/output/verilog_utilities.hpp"
+
 
 namespace alice
 {
@@ -78,8 +80,8 @@ protected:
                         auto part_ntk = mockturtle::node_resynthesis<mockturtle::mig_network>(part,
                                         resyn_mig);
 
-                        std::string filename = dir + "/" + ntk._storage->_network_name + "_" +
-                                               std::to_string(partition) + ".v";;
+                        std::string filename = dir + "/" + ntk.get_network_name() + "_" +
+                                               std::to_string(partition) + ".v";
                         filenames.push_back(filename);
                         parts.push_back(part_ntk);
 
@@ -97,60 +99,36 @@ protected:
             }
         } else {
             if (!store<aig_ntk>().empty()) {
-                auto ntk = *store<aig_ntk>().current();
                 env->out() << "\n";
-                if (!store<part_man_aig_ntk>().empty()) {
+                if (!store<part_man_jr_aig_ntk>().empty()) {
                     mockturtle::write_verilog_params ps;
-                    auto partitions = *store<part_man_aig_ntk>().current();
-                    mockturtle::node_map<std::string, aig_names> node_names(ntk);
-                    mockturtle::node_map<std::string, aig_names> input_names(ntk);
-                    std::string toplevel_module = std::filesystem::path(
-                                                      ntk._storage->_network_name).filename();
-                    std::string toplevel_file = dir + "/" + toplevel_module + ".v";
-                    for (int i = 0; i < partitions.get_part_num(); i++) {
-                        std::vector<mockturtle::aig_network> parts;
-                        std::vector<std::string> filenames;
-                        int partition = i;
-                        auto part_outputs = partitions.get_part_outputs(i);
-                        env->out() << "Partition " << i << ":\n";
-                        env->out() << "Number of Logic Cones = " << part_outputs.size() << "\n";
-                        mkdir(dir.c_str(), 0777);
+                    auto &pm = *store<part_man_jr_aig_ntk>().current();
+                    auto ntk = pm.get_network();
 
-                        oracle::partition_view<aig_names> part = partitions.create_part(ntk, partition);
-                        auto part_ntk = mockturtle::node_resynthesis<aig_names>(part, resyn_aig);
+                    std::string network_name = ntk.get_network_name().empty()
+                                               ? "top" : ntk.get_network_name();
+                    std::string toplevel_module = std::filesystem::path(network_name).filename();
+                    mkdir(dir.c_str(), 0777);
 
-                        std::string modulename = std::filesystem::path(ntk._storage->_network_name + "_"
-                                                 + std::to_string(partition)).filename();
-                        std::string filename = dir + "/" + modulename + ".v";
-                        filenames.push_back(filename);
-                        parts.push_back(part_ntk);
+                    for (int i = 0; i < pm.count(); i++) {
+                        auto part = pm.partition(i);
 
-                        if (part_ntk.num_pos() == 0)
+                        if (part.num_pos() == 0)
                             continue;
 
-                        assert(parts.size() == filenames.size());
-                        for (int j = 0; j < parts.size(); j++) {
-                            ps.module_name = modulename;
-                            mockturtle::write_verilog(parts.at(j), filenames.at(j), ps);
-                        }
+                        env->out() << "Partition " << i << ":\n";
 
-                        if (i == 0)
-                            //to do: write_toplevel_verilog has been removed along with the rest of the duplicate write_verilog method because it was not
-                            //  compatible with the newest version of mockturtle.  We'll want it back, but for now I'm disabling this feature
-                            oracle::write_toplevel_verilog(ntk, partitions, toplevel_file, node_names,
-                                                           input_names, toplevel_module);
+                        auto part_ntk = mockturtle::node_resynthesis<aig_names>(part, resyn_aig);
 
-                        //to do: see above, but for call_submodule
-                        oracle::call_submodule(ntk, part_ntk, toplevel_file, modulename, i, part,
-                                               node_names, input_names);
+                        std::string modulename = std::filesystem::path(
+                                                     network_name + "_" + std::to_string(i)
+                                                 ).filename();
+                        std::string filename = dir + "/" + modulename + ".v";
+                        ps.module_name = modulename;
+                        mockturtle::write_verilog(part_ntk, filename, ps);
 
                         env->out() << "\n";
                     }
-                    std::ofstream os(toplevel_file.c_str(), std::ofstream::app);
-                    os << "endmodule\n"
-                       << std::flush;
-
-                    os.close();
                 } else {
                     env->err() << "Partitions have not been mapped\n";
                 }

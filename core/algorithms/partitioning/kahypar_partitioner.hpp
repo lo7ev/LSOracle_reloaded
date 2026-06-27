@@ -160,6 +160,16 @@ public:
         return partition_manager_junior<network>(ntk, node_partition, part_num);
     }
 
+    std::map<typename Ntk::node, int> get_partition_map() {
+        std::map<typename Ntk::node, int> result;
+        ntk.foreach_node([&](auto n) {
+            result[n] = node_partition[n];
+        });
+        return result;
+    }
+
+    int get_part_num() const { return part_num; }
+
 private:
     int part_num = 0;
     mockturtle::node_map<int, mockturtle::names_view<network>> node_partition;

@@ -35,6 +35,7 @@
 
 #include "utility.hpp"
 #include "kahypar_config.hpp"
+#include "algorithms/partitioning/partition_manager.hpp"
 #include "algorithms/partitioning/partition_manager_junior.hpp"
 #include "algorithms/partitioning/kahypar_partitioner.hpp"
 namespace alice
