@@ -57,6 +57,24 @@ public:
 
     window_view partition(int id)
     {
+        auto [inputs, outputs, gates] = partition_io_full(id);
+        return mockturtle::window_view(ntk, inputs, outputs, gates);
+    }
+
+    // Returns (inputs, outputs) node/signal lists in the same sorted order
+    // used to construct the window_view.  xi port of the Verilog corresponds
+    // to inputs[i], yi port corresponds to outputs[i].
+    std::pair<std::vector<node>, std::vector<signal>>
+    partition_io(int id)
+    {
+        auto [inputs, outputs, gates] = partition_io_full(id);
+        return {inputs, outputs};
+    }
+
+private:
+    std::tuple<std::vector<node>, std::vector<signal>, std::vector<node>>
+    partition_io_full(int id)
+    {
         std::vector<node> inputs;
         std::vector<signal> outputs;
         std::vector<node> gates;
@@ -98,12 +116,14 @@ public:
         });
         std::sort(inputs.begin(), inputs.end());
         auto iend = std::unique(inputs.begin(), inputs.end());
-        inputs.resize(std::distance(inputs.begin(),iend));
+        inputs.resize(std::distance(inputs.begin(), iend));
         std::sort(outputs.begin(), outputs.end());
         auto oend = std::unique(outputs.begin(), outputs.end());
-        outputs.resize(std::distance(outputs.begin(),oend));
-        return mockturtle::window_view(ntk, inputs, outputs, gates);
+        outputs.resize(std::distance(outputs.begin(), oend));
+        return {inputs, outputs, gates};
     }
+
+public:
 
     template<class optimized_network>
     void integrate(int id, mockturtle::names_view<optimized_network> &opt)
