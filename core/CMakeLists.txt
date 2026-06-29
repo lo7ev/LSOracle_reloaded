@@ -33,7 +33,9 @@ add_executable(lsoracle lsoracle.cpp ${LSORACLE_SOURCE})
 target_include_directories(lsoracle PRIVATE .)
 target_include_directories(lsoracle PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_options(lsoracle PRIVATE -Wno-error=template-body -Wno-template-body)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_compile_options(lsoracle PRIVATE -Wno-error=template-body -Wno-template-body)
+endif()
 
 target_link_libraries(lsoracle alice mockturtle kahypar nlohmann_json::nlohmann_json)
 
