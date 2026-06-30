@@ -218,6 +218,15 @@ public:
         mockturtle::detail::foreach_element(_roots.begin(), _roots.end(), fn);
     }
 
+    // Restrict topo_view (and algorithms that use foreach_ci/co) to
+    // partition nodes only.  Without these overrides topo_view would
+    // follow the full original network via the inherited AIG methods.
+    template<typename Fn>
+    void foreach_ci(Fn &&fn) const { foreach_pi(fn); }
+
+    template<typename Fn>
+    void foreach_co(Fn &&fn) const { foreach_po(fn); }
+
     template<typename Fn>
     void foreach_node(Fn &&fn) const
     {

@@ -35,6 +35,8 @@ target_include_directories(lsoracle PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(lsoracle PRIVATE -Wno-error=template-body -Wno-template-body)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(lsoracle PRIVATE -Wno-template-body)
 endif()
 
 target_link_libraries(lsoracle alice mockturtle kahypar nlohmann_json::nlohmann_json)

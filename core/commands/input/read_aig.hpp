@@ -112,11 +112,10 @@ protected:
                     env->err() << "Unable to read aiger file." << std::endl;
                     return;
                 }
-                store<aig_ntk>().extend() = std::make_shared<aig_names>(names_view);
-                env->out() << "AIG network stored\n";
-
                 filename.erase(filename.end() - 4, filename.end());
                 names_view.set_network_name(filename);
+                store<aig_ntk>().extend() = std::make_shared<aig_names>(names_view);
+                env->out() << "AIG network stored\n";
             }
 
         } else {
